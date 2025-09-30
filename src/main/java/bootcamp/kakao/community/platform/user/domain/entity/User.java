@@ -47,23 +47,24 @@ public class User extends BaseTimeEntity {
         this.nickname = nickname;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.role = UserRole.MEMBER;    /// 기본은 다 유저
         this.deleted = false;
     }
 
     /// 정적 팩토리 메서드
-    public static User of(String name, String imageUrl, String nickname, String email, String password, UserRole role) {
+    public static User of(String name, String imageUrl, String nickname, String email, String password) {
         return User.builder()
                 .name(name)
                 .imageUrl(imageUrl)
                 .nickname(nickname)
                 .email(email)
                 .password(password)
-                .role(role)
                 .build();
     }
 
     /// 비즈니스 로직
-
+    public void delete() {
+        this.deleted = true;
+    }
 
 }
