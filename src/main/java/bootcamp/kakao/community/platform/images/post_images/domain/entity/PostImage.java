@@ -2,7 +2,6 @@ package bootcamp.kakao.community.platform.images.post_images.domain.entity;
 
 import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
-import bootcamp.kakao.community.platform.user.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
