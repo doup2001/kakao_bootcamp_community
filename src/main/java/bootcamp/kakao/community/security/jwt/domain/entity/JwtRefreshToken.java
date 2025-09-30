@@ -35,20 +35,21 @@ public class JwtRefreshToken {
 
     /// 빌더 생성자
     @Builder
-    public JwtRefreshToken(Long userId, String refreshToken, String deviceType) {
+    public JwtRefreshToken(Long userId, String refreshToken, String deviceType, long expireTime) {
         this.id = getRefreshTokenKey(userId, deviceType);  /// RedisUtil 통해 Key 발급
         this.userId = userId;
         this.refreshToken = refreshToken;
         this.deviceType = deviceType;
-        this.expireTime = 1000000L;
+        this.expireTime = expireTime;
     }
 
     /// 정적 팩토리 메서드
-    public static JwtRefreshToken of(Long userId, String refreshToken, String deviceType) {
+    public static JwtRefreshToken of(Long userId, String refreshToken, String deviceType, long expireTime) {
         return JwtRefreshToken.builder()
                 .userId(userId)
                 .refreshToken(refreshToken)
                 .deviceType(deviceType)
+                .expireTime(expireTime)
                 .build();
     }
 

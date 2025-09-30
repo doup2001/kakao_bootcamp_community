@@ -1,24 +1,25 @@
 package bootcamp.kakao.community.security.jwt.application;
 
+import bootcamp.kakao.community.common.response.ErrorCode;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
+import bootcamp.kakao.community.platform.user.domain.repository.UserRepository;
+import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
 import bootcamp.kakao.community.security.jwt.domain.entity.JwtRefreshToken;
 import bootcamp.kakao.community.security.jwt.domain.repository.JwtRefreshTokenRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import jakarta.servlet.http.Cookie;
+import bootcamp.kakao.community.security.jwt.filter.JwtAuthenticationException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static bootcamp.kakao.community.common.util.KeyUtil.*;
 
@@ -33,121 +34,100 @@ public class JwtService implements JwtUseCase {
     private long refreshExpiration;
 
     /// 의존성 주입
+    private final JwtUtil jwtUtil;
     private final JwtRefreshTokenRepository repository;
-    private final SecretKey secretKey;
+    private final UserRepository userRepository;
 
+
+    /// 액세스 토큰 발급
     @Override
-    public void createAccessToken(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, User user) {
+    public void createAccessToken(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, CustomUserDetails customUserDetails) {
 
         /// 액세스 토큰 생성
-        String accessToken = createToken(user, accessExpiration);
+        String accessToken = jwtUtil.createToken(customUserDetails, accessExpiration);
 
         /// 쿠키 또는 헤더에 전송하기 (고민)
-        addCookie(httpServletResponse, ACCESS_TOKEN, accessToken);
+        jwtUtil.addCookie(httpServletResponse, ACCESS_TOKEN, accessToken, accessExpiration);
 
     }
 
+    /// 리프레쉬 토큰 발급
     @Override
-    public void createRefreshToken(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, User user) {
+    public void createRefreshToken(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, CustomUserDetails customUserDetails) {
 
         /// 리프레쉬 토큰 생성
-        String refreshToken = createToken(user, refreshExpiration);
+        String refreshToken = jwtUtil.createToken(customUserDetails, refreshExpiration);
 
         /// 요청 종류 파악
         String deviceType = getDeviceType(httpServletRequest);
 
         /// 객체 생성
-        var token = JwtRefreshToken.of(user.getId(), refreshToken, deviceType);
+        var token = JwtRefreshToken.of(customUserDetails.getId(), refreshToken, deviceType, refreshExpiration);
 
         /// 레디스에 저장하기
         JwtRefreshToken response = repository.save(token);
 
         /// 쿠키에 전송하기
-        addCookie(httpServletResponse, REFRESH_TOKEN, response.getRefreshToken());
+        jwtUtil.addCookie(httpServletResponse, REFRESH_TOKEN, response.getRefreshToken(), refreshExpiration);
 
     }
 
+    /// 액세스 토큰 검증
     @Override
-    public boolean validateToken(HttpServletRequest httpServletRequest, User user, String type) {
+    public void validateAccessToken(HttpServletRequest request) {
 
-        /// 쿠키 값 가져오기
-        String jwtToken = extractToken(httpServletRequest, type);
+        /// 검증
+        String accessToken = jwtUtil.extractToken(request, ACCESS_TOKEN)
+                .orElseThrow(() -> new JwtAuthenticationException(ErrorCode.TOKEN_NOT_FOUND));
 
-        /// 요청 종류 파악
-        String deviceType = getDeviceType(httpServletRequest);
+        try {
+            /// 토큰 자체의 검증성 파악
+            jwtUtil.assertJwtValid(accessToken);
 
-        /// 유저랑 검증 비교
-        JwtRefreshToken token = repository.findByUserIdAndDeviceType((user.getId()), deviceType)
-                .orElseThrow(() -> new NoSuchElementException("해당 디바이스에서 리프레쉬 토큰이 존재하지 않습니다.")); /// 없다면 예외 발생
+            Long userIdFromAccessToken = jwtUtil.getUserIdFromAccessToken(accessToken);
 
-        /// 토큰 자체의 검증성 파악
-        assertJwtValid(jwtToken);
+            /// 인증 설정
+            User user = userRepository.findById(userIdFromAccessToken)
+                    .orElseThrow(NoSuchElementException::new);
 
-        /// 저장 값과 해당 값이 일치하는지 비교
-        return token.getRefreshToken().equals(jwtToken);
+            /// 시큐리티에 유저 저장
+            CustomUserDetails customUserDetails = CustomUserDetails.of(user);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    }
-
-
-    /// 키 발급 내부 로직
-    private String createToken(User user, long expiredTime) {
-
-        /// 현재 시간 기준으로 생성
-        Instant now = Instant.now();
-
-        /// 토큰 만료일 설정
-        Date expiredAt = Date.from(now.plus(Duration.ofMinutes(expiredTime)));
-
-        /// JWT 내용 생성
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(ID_CLAIM, user.getId());
-
-        return Jwts.builder()
-                .setIssuer("kakao-bootcamp-community") // 작성자
-                .setClaims(claims)  // 페이로드
-                .setIssuedAt(Date.from(now)) // 발급 시간
-                .setExpiration(expiredAt) // 만료 시간
-                .signWith(secretKey, SignatureAlgorithm.HS256)  // 비밀키 서명
-                .compact();
-    }
-
-    /// 요청한 쿠키에서 토큰 가져오는 내부 로직
-    private String extractToken(HttpServletRequest httpServletRequest, String type) {
-
-        /// 쿠키 가져오기
-        Cookie[] cookies = httpServletRequest.getCookies();
-
-        /// 쿠키가 존재한다면,
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-
-                /// 해당 타입의 쿠키만 추출
-                if (cookie.getName().equals(type)) {
-                    return cookie.getValue();
-                }
-            }
+        } catch (ExpiredJwtException e) {
+            // 토큰이 '만료'된 경우의 처리
+            throw new JwtAuthenticationException(ErrorCode.TOKEN_EXPIRED);
+        } catch (SignatureException e) {
+            // 서명이 잘못된 경우의 처리
+            throw new JwtAuthenticationException(ErrorCode.TOKEN_INVALID);
+        } catch (MalformedJwtException e) {
+            // 토큰 구조가 잘못된 경우의 처리
+            throw new JwtAuthenticationException(ErrorCode.TOKEN_UNSUPPORTED);
+        } catch (Exception e) {
+            // 기타 예외 처리
+            throw new JwtAuthenticationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        throw new NoSuchElementException();
     }
 
-    /// 비밀키로 해석 가능한지 검증
-    private void assertJwtValid(String jwt) {
-        Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(jwt); // 유효하지 않으면 예외 발생
-    }
+    /// 리프레쉬 토큰 검증, 재발급에서 사용
+    @Override
+    public JwtRefreshToken validateRefreshToken(HttpServletRequest request) {
 
+        /// 토큰 추출
+        String refreshToken = jwtUtil.extractToken(request, REFRESH_TOKEN)
+                .orElseThrow(() -> new JwtAuthenticationException(ErrorCode.TOKEN_NOT_FOUND));
 
-    /// 토큰을 쿠키에 저장하기
-    private void addCookie(HttpServletResponse httpServletResponse, String type, String jwtToken) {
+        /// 토큰 자체의 유효성 검증 (서명, 만료일)
+        jwtUtil.assertJwtValid(refreshToken);
 
-        /// 쿠키 생성
-        Cookie token = new Cookie(type, jwtToken);
-        token.setPath("/");
+        /// Redis에 해당 토큰이 저장되어 있는지 확인
+        String deviceType = getDeviceType(request);
 
-        /// 쿠키 저장
-        httpServletResponse.addCookie(token);
+        /// 리턴
+        return repository.findByRefreshTokenAndDeviceType(refreshToken, deviceType)
+                .orElseThrow(() -> new JwtAuthenticationException(ErrorCode.INVALID_LOGIN));
+
     }
 
 
