@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum UserRole {
-    Member("유저"),
-    Admin("관리자");
+    MEMBER("유저"),
+    ADMIN("관리자");
 
     private final String label;
 
@@ -25,6 +25,6 @@ public enum UserRole {
                 return userRole;
             }
         }
-        return null;
+        throw new IllegalArgumentException("Unknown UserRole label: " + label);
     }
 }

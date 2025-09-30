@@ -16,7 +16,7 @@ public class Report extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JoinColumn(name = "report_id", nullable = false)
+    @Column(name = "report_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

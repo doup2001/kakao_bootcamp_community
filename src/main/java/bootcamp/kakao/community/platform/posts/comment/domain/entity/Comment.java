@@ -40,8 +40,7 @@ public class Comment extends BaseTimeEntity {
 
     /// 생성자
     @Builder
-    protected Comment(Long id, Post post, User user, Comment parent, String content) {
-        this.id = id;
+    protected Comment(Post post, User user, Comment parent, String content) {
         this.post = post;
         this.user = user;
         this.parent = parent;

@@ -31,6 +31,7 @@ public class PostLike extends BaseTimeEntity {
     /// 생성자
     @Builder
     protected PostLike(User user, Post post) {
+        this.id = new PostLikeId(user.getId(), post.getId());
         this.user = user;
         this.post = post;
     }

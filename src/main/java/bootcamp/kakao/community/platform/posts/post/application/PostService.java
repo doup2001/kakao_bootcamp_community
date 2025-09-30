@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PostService {
+public class PostService implements PostUseCase{
 
     private final PostRepository repository;
 }

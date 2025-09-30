@@ -1,5 +1,6 @@
 package bootcamp.kakao.community.platform.images.post_images.domain.entity;
 
+import bootcamp.kakao.community.platform.BaseTimeEntity;
 import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
 import jakarta.persistence.*;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "posts_images")
-public class PostImage {
+public class PostImage extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

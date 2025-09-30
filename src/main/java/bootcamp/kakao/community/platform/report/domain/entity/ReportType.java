@@ -25,7 +25,7 @@ public enum ReportType {
                 return type;
             }
         }
-        return null;
+        throw new IllegalArgumentException("Unknown ReportType label: " + label);
     }
 
 }
