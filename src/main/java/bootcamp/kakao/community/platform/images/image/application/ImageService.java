@@ -9,6 +9,7 @@ import bootcamp.kakao.community.platform.user.application.UserUseCase;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -25,6 +26,7 @@ public class ImageService implements ImageUseCase {
 
     /// 게시글 이미지 처리
     @Override
+    @Transactional
     public ImageResponse upload(ImageRequest req, Long userId) throws IOException {
 
         /// 요청한 유저
@@ -42,6 +44,7 @@ public class ImageService implements ImageUseCase {
 
     /// 회원가입을 위한 임시 사용
     @Override
+    @Transactional
     public ImageResponse uploadTemporaryImage(ImageRequest req) throws IOException {
 
         /// 클라우드 요청
@@ -52,6 +55,15 @@ public class ImageService implements ImageUseCase {
         repository.save(image);
 
         return presignedURL;
+    }
+
+    /// URL 바탕으로 이미지 객체 조회하기
+    @Override
+    @Transactional(readOnly = true)
+    public Image getImage(String url) {
+
+        return repository.findByUrl(url)
+                .orElseThrow(NoSuchElementException::new);
     }
 
 }

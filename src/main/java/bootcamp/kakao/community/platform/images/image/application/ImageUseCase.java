@@ -2,6 +2,7 @@ package bootcamp.kakao.community.platform.images.image.application;
 
 import bootcamp.kakao.community.platform.images.image.application.dto.ImageRequest;
 import bootcamp.kakao.community.platform.images.image.application.dto.ImageResponse;
+import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 
 import java.io.IOException;
 
@@ -13,4 +14,7 @@ public interface ImageUseCase {
     /// 회원가입을 위한 임시 저장소
     ImageResponse uploadTemporaryImage(ImageRequest req) throws IOException;
 
+
+    /// 내부 서비스 로직
+    Image getImage(String url);
 }
