@@ -2,8 +2,8 @@ package bootcamp.kakao.community.common.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.micrometer.common.lang.Nullable;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 

@@ -14,5 +14,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByNickname(String nickname);
 
     /// 삭제되지않은 유저를 가져오고자 할 때,
-    Optional<User> findByIdAndDeletedIsTrue(Long id);
+    Optional<User> findByIdAndDeletedIsFalse(Long id);
 }

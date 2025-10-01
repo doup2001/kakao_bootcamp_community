@@ -21,8 +21,6 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class UserService implements UserUseCase{
 
-    private final UserRepository userRepository;
-
     private final UserRepository repository;
     private final JwtUseCase tokenService;
 
@@ -73,7 +71,7 @@ public class UserService implements UserUseCase{
         Long userId = customUserDetails.getId();
 
         /// 영속성 컨테이너에 값 불러오기
-        User user = repository.findByIdAndDeletedIsTrue(userId)
+        User user = repository.findByIdAndDeletedIsFalse(userId)
                 .orElseThrow(() -> new NoSuchElementException("해당 유저는 없습니다."));
 
         /// 더티체킹으로 값 수정하기
