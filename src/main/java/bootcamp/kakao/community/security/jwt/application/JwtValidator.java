@@ -104,7 +104,7 @@ public class JwtValidator {
     public void removeRefreshToken(Long userId, String deviceType, String refreshToken) {
 
         /// 토큰 추출
-        JwtRefreshToken token = validateRefreshToken(refreshToken, deviceType);
+        JwtRefreshToken token = validateRefreshToken(deviceType, refreshToken);
 
         /// 토큰에서 유저 ID 추출
         Long userIdFromAccessToken = token.getUserId();

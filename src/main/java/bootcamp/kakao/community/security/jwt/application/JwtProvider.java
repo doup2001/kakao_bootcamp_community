@@ -73,7 +73,7 @@ public class JwtProvider {
         Instant now = Instant.now();
 
         /// 토큰 만료일 설정
-        Date expiredAt = Date.from(now.plus(Duration.ofMinutes(expiredTime)));
+        Date expiredAt = Date.from(now.plus(Duration.ofSeconds(expiredTime)));
 
         /// JWT 내용 생성
         Map<String, Object> claims = new HashMap<>();
