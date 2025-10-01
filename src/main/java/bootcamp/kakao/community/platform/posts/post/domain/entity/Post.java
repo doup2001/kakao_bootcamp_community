@@ -44,6 +44,21 @@ public class Post extends BaseTimeEntity {
     /// 빌더 생성자
     @Builder
     protected Post(User user, Category category, String title, String content) {
+
+        /// 예외 처리
+        if (user == null) {
+            throw new IllegalArgumentException("작성자(user)는 필수입니다.");
+        }
+        if (category == null) {
+            throw new IllegalArgumentException("카테고리(category)는 필수입니다.");
+        }
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("제목(title)은 비어있을 수 없습니다.");
+        }
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("내용(content)은 비어있을 수 없습니다.");
+        }
+
         this.user = user;
         this.category = category;
         this.title = title;
@@ -60,6 +75,24 @@ public class Post extends BaseTimeEntity {
                 .title(title)
                 .content(content)
                 .build();
+    }
+
+    /// 비즈니스 로직
+    public void delete() {
+        this.deleted = true;
+    }
+
+    /// 수정
+    public void update(String title, String content) {
+
+        if (title != null) {
+            /// 제목을 수정할 내용이 존재한다면,
+            this.title = title;
+        }
+        if (content != null) {
+            /// 내용을 수정할 내용이 존재한다면,
+            this.content = content;
+        }
     }
 
 
