@@ -2,40 +2,40 @@ package bootcamp.kakao.community.security.jwt.filter;
 
 import bootcamp.kakao.community.common.response.ApiResponse;
 import bootcamp.kakao.community.common.response.CustomException;
+import bootcamp.kakao.community.common.response.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class JwtFailureHandler implements AuthenticationEntryPoint {
-
+public class JwtDeniedHandler implements AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
 
     @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         AuthenticationException authException) throws IOException {
+    public void handle(HttpServletRequest request, HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        // 401 Error 발생
-        JwtAuthenticationException jwtAuthenticationException = (JwtAuthenticationException) authException;
 
-        CustomException exception = new CustomException(jwtAuthenticationException.getErrorCode(), null);
+        // 권한 부족 403 Error
+        CustomException exception = new CustomException(ErrorCode.FORBIDDEN, null);
         ApiResponse<Object> apiResponse = ApiResponse.fail(exception);
 
-        // 응답 설정
-        response.setStatus(apiResponse.httpStatus().value());
+        /// response 제작
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
         // JSON 응답
         objectMapper.writeValue(response.getWriter(), apiResponse);
+
     }
 }

@@ -1,0 +1,40 @@
+spring:
+
+  ### DATA-SOURCE 설정
+  datasource:
+    url: jdbc:mysql://localhost:3306/ktb
+    username: local
+    password: local
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 5000
+      maximum-pool-size: 5
+      max-lifetime: 18000000
+      idle-timeout: 6000000
+
+  ### JPA 설정
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        auto_quote_keyword: false
+        globally_quoted_identifiers: false
+        format_sql: false
+        show_sql: false
+
+  ### 레디스 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# jwt
+auth:
+  jwt:
+    secret: 434c9b82d45b066aa3d793bbde37c6fe2bc2ac1a538c5fb2736519f96f205d86
+    access:
+      expiration: 86400000 # 1일
+    refresh:
+      expiration: 604800000 # 7일
