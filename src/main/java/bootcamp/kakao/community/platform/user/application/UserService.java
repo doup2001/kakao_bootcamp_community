@@ -3,14 +3,10 @@ package bootcamp.kakao.community.platform.user.application;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
 import bootcamp.kakao.community.platform.user.domain.repository.UserRepository;
 import bootcamp.kakao.community.platform.user.application.dto.SignUpRequest;
-import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
-import bootcamp.kakao.community.security.jwt.application.JwtUseCase;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import bootcamp.kakao.community.security.jwt.application.JwtProvider;
+import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenResponse;
+import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,15 +18,14 @@ import java.util.NoSuchElementException;
 public class UserService implements UserUseCase{
 
     private final UserRepository repository;
-    private final JwtUseCase tokenService;
-
-    /// 패스워드 암호화
     private final BCryptPasswordEncoder passwordEncoder;
 
-    /// 회원가입
+    private final JwtProvider jwtProvider;
+
+    /// 회원가입, 회원가입 후 바로 이용가능하도록 토큰 발급
     @Override
     @Transactional
-    public void signUp(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, SignUpRequest request) {
+    public JwtTokenResponse signUp(SignUpRequest request, String deviceType) {
 
         /// 이메일 중복체크 및 예외처리
         boolean duplicateEmail = checkDuplicateEmail(request.email());
@@ -49,26 +44,24 @@ public class UserService implements UserUseCase{
             throw new IllegalArgumentException("패스워드가 일치하지 않는 문제입니다.");
         }
 
-        /// 객체 생성
-        User user = User.of(request.name(), request.imageUrl(), request.nickname(), request.email(), passwordEncoder.encode(request.password()));
-        User savedUser = repository.save(user);
+        /// 객체 생성 후, 저장
+        var requestUser = User.of(request.name(), request.imageUrl(), request.nickname(), request.email(), passwordEncoder.encode(request.password()));
+        User user = repository.save(requestUser);
 
-        /// 시큐리티에 유저 저장
-        CustomUserDetails customUserDetails = CustomUserDetails.of(savedUser);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        /// 로그인했다면, JWT 발급하기
+        var jwtRequest = JwtTokenRequest.from(user);
 
-        /// 토큰 발급
-        tokenService.createAccessToken(httpServletRequest, httpServletResponse, customUserDetails);
+        String accessToken = jwtProvider.createAccessToken(jwtRequest);
+        String refreshToken = jwtProvider.createRefreshToken(deviceType, jwtRequest);
+
+        return JwtTokenResponse.of(accessToken, refreshToken);
+
     }
 
     /// 회원탈퇴
     @Override
     @Transactional
-    public void withdraw(HttpServletRequest httpServletRequest, HttpServletResponse response, CustomUserDetails customUserDetails) {
-
-        /// 유저 ID
-        Long userId = customUserDetails.getId();
+    public void withdraw(Long userId) {
 
         /// 영속성 컨테이너에 값 불러오기
         User user = repository.findByIdAndDeletedIsFalse(userId)

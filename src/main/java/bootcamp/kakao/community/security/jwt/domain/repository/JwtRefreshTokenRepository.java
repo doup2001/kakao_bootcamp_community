@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface JwtRefreshTokenRepository extends CrudRepository<JwtRefreshToken, String> {
 
-    Optional<JwtRefreshToken> findByRefreshTokenAndDeviceType(String refreshToken, String deviceType);
+    Optional<JwtRefreshToken> findByRefreshTokenAndDeviceTypeAndUserId(String refreshToken, String deviceType, Long userId);
 }
