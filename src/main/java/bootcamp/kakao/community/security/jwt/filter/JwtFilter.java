@@ -1,21 +1,28 @@
 package bootcamp.kakao.community.security.jwt.filter;
 
-import bootcamp.kakao.community.security.jwt.application.JwtUseCase;
+import bootcamp.kakao.community.security.jwt.application.CookieUtil;
+import bootcamp.kakao.community.security.jwt.application.JwtValidator;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtUseCase tokenService;
+    private final JwtValidator jwtValidator;
+    private final CookieUtil cookieUtil;
+
+    /// 핸들러
     private final JwtFailureHandler jwtFailureHandler;
 
     @Override
@@ -28,13 +35,24 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         try {
-            /// 검증하기
-            tokenService.validateAccessToken(request);
+            /// 토큰 추출
+            Optional<String> accessTokenOptional = cookieUtil.getAccessToken(request);
 
-            /// 다음 필터로 진행
+            /// 토큰이 존재할 때만 인증 처리
+            if (accessTokenOptional.isPresent()) {
+                String accessToken = accessTokenOptional.get();
+
+                /// 토큰 검증 후, Authentication 객체 반환
+                Authentication authentication = jwtValidator.validateAccessToken(accessToken);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            /// 토큰이 없거나, 인증에 성공했으면 다음 필터로 진행
             filterChain.doFilter(request, response);
+
         } catch (JwtAuthenticationException ex) {
-            /// 실패 핸들러로 이동
+
+            /// 인증 실패 시 핸들러 호출 후 필터 체인 중단
             jwtFailureHandler.commence(request, response, ex);
         }
     }
