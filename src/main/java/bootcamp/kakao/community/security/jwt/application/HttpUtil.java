@@ -10,7 +10,7 @@ import java.util.Optional;
 import static bootcamp.kakao.community.common.util.KeyUtil.*;
 
 @Component
-public class CookieUtil {
+public class HttpUtil {
 
     @Value("${auth.jwt.access.expiration}")
     private long accessExpiration;
@@ -28,8 +28,8 @@ public class CookieUtil {
         return extractToken(request, REFRESH_TOKEN);
     }
 
-    /// 토큰을 쿠키에 저장하기
-    public void addAccessTokenCookie(HttpServletResponse httpServletResponse,String accessToken) {
+    /// 액세스 토큰을 쿠키에 저장하기
+    public void addAccessTokenCookie(HttpServletResponse httpServletResponse, String accessToken) {
 
         /// 쿠키 생성
         Cookie cookie = createCookie(ACCESS_TOKEN, accessToken, accessExpiration);
@@ -38,7 +38,7 @@ public class CookieUtil {
         httpServletResponse.addCookie(cookie);
     }
 
-    /// 토큰을 쿠키에 저장하기
+    /// 리프레쉬 토큰을 쿠키에 저장하기
     public void addRefreshTokenCookie(HttpServletResponse httpServletResponse, String refreshToken) {
 
         /// 쿠키 생성
@@ -46,6 +46,23 @@ public class CookieUtil {
 
         /// 쿠키 저장
         httpServletResponse.addCookie(cookie);
+    }
+
+    /// 액세스 토큰을 삭제하기
+    public void removeAccessTokenCookie(HttpServletResponse httpServletResponse) {
+        Cookie cookie = createCookie(ACCESS_TOKEN, null, 0);
+        httpServletResponse.addCookie(cookie);
+    }
+
+    /// 리프레쉬 토큰을 삭제하기
+    public void removeRefreshTokenCookie(HttpServletResponse httpServletResponse) {
+        Cookie cookie = createCookie(REFRESH_TOKEN, null, 0);
+        httpServletResponse.addCookie(cookie);
+    }
+
+    /// Header에서 어떤 디바이스인지 체크
+    public String getDeviceType(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getHeader("User-Agent");
     }
 
     // =================
@@ -80,6 +97,4 @@ public class CookieUtil {
         }
         return Optional.empty();
     }
-
-
 }

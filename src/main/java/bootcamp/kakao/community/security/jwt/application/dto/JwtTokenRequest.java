@@ -5,14 +5,14 @@ import bootcamp.kakao.community.platform.user.domain.entity.UserRole;
 import lombok.Builder;
 
 @Builder
-public record JwtUserInfo(
+public record JwtTokenRequest(
         Long userId,
         UserRole role
 ) {
 
     /// 정적 팩토리 메서드
-    public static JwtUserInfo from(User user) {
-        return JwtUserInfo.builder()
+    public static JwtTokenRequest from(User user) {
+        return JwtTokenRequest.builder()
                 .userId(user.getId())
                 .role(user.getRole())
                 .build();

@@ -1,7 +1,6 @@
 package bootcamp.kakao.community.security.jwt.application;
 
-import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
-import bootcamp.kakao.community.security.jwt.application.dto.JwtUserInfo;
+import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenRequest;
 import bootcamp.kakao.community.security.jwt.domain.entity.JwtRefreshToken;
 import bootcamp.kakao.community.security.jwt.domain.repository.JwtRefreshTokenRepository;
 import io.jsonwebtoken.Jwts;
@@ -42,14 +41,14 @@ public class JwtProvider {
 
 
     /// 액세스 토큰 발급
-    public String createAccessToken(JwtUserInfo userInfo) {
+    public String createAccessToken(JwtTokenRequest userInfo) {
 
         /// 액세스 토큰 생성
         return createToken(userInfo, accessExpiration);
     }
 
     /// 리프레쉬 토큰 발급
-    public String createRefreshToken(String deviceType, JwtUserInfo userInfo) {
+    public String createRefreshToken(String deviceType, JwtTokenRequest userInfo) {
 
         /// 리프레쉬 토큰 생성
         String refreshToken = createToken(userInfo, refreshExpiration);
@@ -68,7 +67,7 @@ public class JwtProvider {
     // =================
 
     /// 토큰 발급 내부 로직
-    private String createToken(JwtUserInfo tokenInfo, long expiredTime) {
+    private String createToken(JwtTokenRequest tokenInfo, long expiredTime) {
 
         /// 현재 시간 기준으로 생성
         Instant now = Instant.now();

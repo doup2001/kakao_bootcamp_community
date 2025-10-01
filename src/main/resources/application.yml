@@ -23,6 +23,7 @@ spring:
         globally_quoted_identifiers: false
         format_sql: false
         show_sql: false
+    open-in-view: false
 
   ### 레디스 설정
   data:

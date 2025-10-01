@@ -77,9 +77,13 @@ public class JwtValidator {
             /// 토큰 자체의 유효성 검증 (서명, 만료일)
             assertJwtValid(refreshToken);
 
+            /// 토큰에서 유저 ID 추출
+            Long userId = getUserIdFromAccessToken(refreshToken);
+
             /// 리턴
-            return repository.findByRefreshTokenAndDeviceType(refreshToken, deviceType)
+            return repository.findByRefreshTokenAndDeviceTypeAndUserId(refreshToken, deviceType, userId)
                     .orElseThrow(() -> new JwtAuthenticationException(ErrorCode.REFRESH_INVALID_LOGIN));
+
 
         } catch (ExpiredJwtException e) {
             // 토큰이 '만료'된 경우의 처리
@@ -94,6 +98,25 @@ public class JwtValidator {
             // 기타 예외 처리
             throw new JwtAuthenticationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /// 로그아웃을 위해 사용하는 로직
+    public void removeRefreshToken(Long userId, String deviceType, String refreshToken) {
+
+        /// 토큰 추출
+        JwtRefreshToken token = validateRefreshToken(refreshToken, deviceType);
+
+        /// 토큰에서 유저 ID 추출
+        Long userIdFromAccessToken = token.getUserId();
+
+        /// 유저가 다르다면, 예외 발생
+        if (!userIdFromAccessToken.equals(userId)) {
+            throw new JwtAuthenticationException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
+
+        /// 레디스에서 토큰 삭제
+        repository.delete(token);
+
     }
 
     // =================

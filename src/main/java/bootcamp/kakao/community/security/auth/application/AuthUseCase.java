@@ -1,18 +1,19 @@
 package bootcamp.kakao.community.security.auth.application;
 
 import bootcamp.kakao.community.security.auth.application.dto.LoginRequest;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenResponse;
+
+import java.util.Optional;
 
 public interface AuthUseCase {
 
     /// 로그인
-    void login(HttpServletRequest httpServletRequest, HttpServletResponse response, LoginRequest request);
+    JwtTokenResponse login(LoginRequest request, String deviceType);
 
     /// 로그아웃
-    void logout(HttpServletRequest httpServletRequest, HttpServletResponse response);
+    void logout(Long userId, String deviceType, Optional<String> refreshToken);
 
     /// 토큰 재발급
-    void reissue(HttpServletRequest httpServletRequest, HttpServletResponse response);
+    JwtTokenResponse reissue(String deviceType, Optional<String> refreshToken);
 
 }

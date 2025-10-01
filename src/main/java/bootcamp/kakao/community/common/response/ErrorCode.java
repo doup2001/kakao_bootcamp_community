@@ -37,7 +37,7 @@ public enum ErrorCode {
 
 
     TOKEN_NOT_FOUND(401_002, HttpStatus.UNAUTHORIZED, "토큰이 존재하지 않습니다."),
-    REFRESH_INVALID_LOGIN(401_007, HttpStatus.UNAUTHORIZED, "리프레쉬 토큰이 없기에 로그인이 필요합니다."),
+    REFRESH_INVALID_LOGIN(401_007, HttpStatus.UNAUTHORIZED, "리프레쉬 토큰이 없기에 재로그인이 필요합니다."),
     TOKEN_NOT_FOUND_COOKIE(401_010, HttpStatus.UNAUTHORIZED, "쿠키에 리프레시 토큰이 존재하지 않습니다."),
 
 

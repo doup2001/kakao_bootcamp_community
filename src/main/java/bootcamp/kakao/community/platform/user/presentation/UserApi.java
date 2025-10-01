@@ -5,6 +5,8 @@ import bootcamp.kakao.community.platform.user.application.UserUseCase;
 import bootcamp.kakao.community.platform.user.application.dto.DuplicateResponse;
 import bootcamp.kakao.community.platform.user.application.dto.SignUpRequest;
 import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
+import bootcamp.kakao.community.security.jwt.application.HttpUtil;
+import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -20,6 +22,9 @@ public class UserApi {
     /// 유저 서비스
     private final UserUseCase service;
 
+    /// 토큰 발급 서비스
+    private final HttpUtil httpUtil;
+
     /**
      * RestAPI 일관성을 위해
      * 회원가입 엔드포인트는 "/v1/users" 로
@@ -30,8 +35,15 @@ public class UserApi {
             HttpServletResponse httpServletResponse,
             @RequestBody @Valid SignUpRequest request) {
 
-        /// 서비스 로직
-        service.signUp(httpServletRequest, httpServletResponse, request);
+        /// 디바이스 조회
+        String deviceType = httpUtil.getDeviceType(httpServletRequest);
+
+        /// 회원가입 서비스 로직
+        JwtTokenResponse response = service.signUp(request, deviceType);
+
+        /// 성공했다면, 토큰 발급
+        httpUtil.addAccessTokenCookie(httpServletResponse, response.accessToken());
+        httpUtil.addRefreshTokenCookie(httpServletResponse, response.refreshToken());
 
         /// 리턴
         return ApiResponse.created();
@@ -42,12 +54,15 @@ public class UserApi {
      */
     @PutMapping
     public ApiResponse<Void> delete(
-            HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         /// 서비스 로직
-        service.withdraw(httpServletRequest, httpServletResponse, customUserDetails);
+        service.withdraw(customUserDetails.getId());
+
+        /// 토큰 삭제
+        httpUtil.removeAccessTokenCookie(httpServletResponse);
+        httpUtil.removeRefreshTokenCookie(httpServletResponse);
 
         /// 응답
         return ApiResponse.deleted();

@@ -1,6 +1,6 @@
 package bootcamp.kakao.community.security.jwt.filter;
 
-import bootcamp.kakao.community.security.jwt.application.CookieUtil;
+import bootcamp.kakao.community.security.jwt.application.HttpUtil;
 import bootcamp.kakao.community.security.jwt.application.JwtValidator;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,7 +20,7 @@ import java.util.Optional;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtValidator jwtValidator;
-    private final CookieUtil cookieUtil;
+    private final HttpUtil httpUtil;
 
     /// 핸들러
     private final JwtFailureHandler jwtFailureHandler;
@@ -36,7 +36,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             /// 토큰 추출
-            Optional<String> accessTokenOptional = cookieUtil.getAccessToken(request);
+            Optional<String> accessTokenOptional = httpUtil.getAccessToken(request);
 
             /// 토큰이 존재할 때만 인증 처리
             if (accessTokenOptional.isPresent()) {
