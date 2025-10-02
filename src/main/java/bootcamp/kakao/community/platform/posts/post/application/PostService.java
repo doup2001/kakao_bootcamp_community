@@ -2,6 +2,7 @@ package bootcamp.kakao.community.platform.posts.post.application;
 
 import bootcamp.kakao.community.common.response.paging.SliceRequest;
 import bootcamp.kakao.community.common.response.paging.SliceResponse;
+import bootcamp.kakao.community.common.util.KeyUtil;
 import bootcamp.kakao.community.platform.images.image.application.ImageUseCase;
 import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 import bootcamp.kakao.community.platform.images.post_images.application.PostImageUseCase;
@@ -17,6 +18,7 @@ import bootcamp.kakao.community.platform.posts.post.domain.repository.PostReposi
 import bootcamp.kakao.community.platform.user.application.UserUseCase;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ import java.util.NoSuchElementException;
 public class PostService implements PostUseCase{
 
     private final PostRepository repository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /// 의존성
     private final UserUseCase userService;
@@ -38,7 +41,7 @@ public class PostService implements PostUseCase{
     private final ImageUseCase imageService;
     private final PostImageUseCase postImageService;
 
-    /// 게시글 작성
+    /// 게시글 작성, 다중 이미지 고려해서 작성
     @Override
     @Transactional
     public void create(PostRequest req, Long userId) {
@@ -54,14 +57,11 @@ public class PostService implements PostUseCase{
         var reqPost = Post.of(user, category, req.title(), req.content());
         Post post = repository.save(reqPost);
 
-        /// 해당 이미지 불러오기 (영속성 컨테이너)
-        Image image = imageService.getImage(req.imageUrl());
+        /// 실제 이미지가 있는지, 불러오기 (영속성 컨테이너)
+        List<Image> image = imageService.getImage(req.imageUrls());
 
-        /// 이미지 저장 (영속성 컨테이너)
-        PostImage postImage = postImageService.savePostImage(post, image);
-
-        /// 사용중인 이미지로 체크 (더티체킹)
-        postImage.getImage().confirm();
+        /// 이미지 저장 (영속성 컨테이너에 저장하기), 생성과 함께 Image의 사용이 확정된다.
+        postImageService.savePostImage(post, image);
 
     }
 
@@ -74,6 +74,7 @@ public class PostService implements PostUseCase{
     }
 
     /// 게시글 상세 조회
+    /// 조회수가 상승해야한다.
     @Override
     @Transactional(readOnly = true)
     public PostDetailResponse getPost(Long postId) {
@@ -83,6 +84,13 @@ public class PostService implements PostUseCase{
 
         /// 게시글 이미지에서 조회하기
         List<PostImage> images = postImageService.loadPostImages(post);
+
+        /// 조회했기에, 레디스에서 조회수 증가시키기
+        String redisKey = KeyUtil.getPostView(post.getId());
+        redisTemplate.opsForValue().increment(redisKey, 1);
+
+        /// 레디스에서 조회 수, 댓글 수,좋아요 수를 가져와야한다.
+        // TODO! 레디스에서 값 가져오기
 
         /// 응답
         return PostDetailResponse.from(post, images);

@@ -40,6 +40,10 @@ public class PostImage extends BaseTimeEntity {
 
     /// 정적 팩토리 메서드
     public static PostImage of(Post post, Image image, int ord) {
+
+        /// 게시글 이미지로 들어가게 되면, 사용 확정
+        image.confirm();
+
         return PostImage.builder()
                 .post(post)
                 .image(image)

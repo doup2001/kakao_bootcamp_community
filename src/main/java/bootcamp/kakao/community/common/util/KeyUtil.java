@@ -7,6 +7,11 @@ public class KeyUtil {
 
     /// 개별 키 목록
     private static final String SEPARATOR = ":";
+    private static final String DELIMITER = "-";
+
+    /// 게시글
+    private static final String POST = "post";
+    private static final String VIEW = "view";
 
     /// JWT
     public static final String REFRESH_TOKEN = "refresh_token";
@@ -20,7 +25,10 @@ public class KeyUtil {
     /// 키 생성 함수
     public static String getRefreshTokenKey(Long userId, String deviceType) {
         return REFRESH_TOKEN + SEPARATOR + userId + SEPARATOR + deviceType;
+    }
 
+    public static String getPostView(Long postId) {
+        return POST + DELIMITER + VIEW + SEPARATOR + postId;
     }
 
 

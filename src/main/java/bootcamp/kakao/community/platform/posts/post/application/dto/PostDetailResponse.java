@@ -7,9 +7,24 @@ import bootcamp.kakao.community.platform.user.application.dto.UserResponse;
 import lombok.Builder;
 import java.util.*;
 
+/**
+ * 게시글 상세조회 DTO
+ * @param author            작성자
+ * @param category          카테고리
+ * @param title             제목
+ * @param content           내용
+ * @param likeCount         좋아요수
+ * @param viewCount         조회수
+ * @param commentCount      댓글수
+ * @param image             이미지
+ * @param liked             좋아요 눌렀는지 여부
+ * @param editable          수정/삭제 가능 여부
+ * @param createdAt         글 작성 시간
+ * @param updatedAt         글 수정 시간
+ */
 @Builder
 public record PostDetailResponse(
-        UserResponse user,
+        UserResponse author,
         String category,
         String title,
         String content,
@@ -17,6 +32,8 @@ public record PostDetailResponse(
         int viewCount,
         int commentCount,
         List<PostImageResponse> image,
+        boolean liked,
+        boolean editable,
         String createdAt,
         String updatedAt
 ) {
@@ -28,7 +45,7 @@ public record PostDetailResponse(
         var stat = post.getPostStat();
 
         return PostDetailResponse.builder()
-                .user(UserResponse.from(post.getUser()))
+                .author(UserResponse.from(post.getUser()))
                 .category(post.getCategory().getName())
                 .title(post.getTitle())
                 .content(post.getContent())
@@ -48,7 +65,7 @@ public record PostDetailResponse(
         var stat = post.getPostStat();
 
         return PostDetailResponse.builder()
-                .user(UserResponse.from(post.getUser()))
+                .author(UserResponse.from(post.getUser()))
                 .category(post.getCategory().getName())
                 .title(post.getTitle())
                 .content(post.getContent())

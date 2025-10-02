@@ -25,7 +25,7 @@ public class Image extends BaseTimeEntity {
     @Column(nullable = false)
     private String fileName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String url;
 
     @Column(nullable = false)

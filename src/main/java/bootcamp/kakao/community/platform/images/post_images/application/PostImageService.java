@@ -6,6 +6,7 @@ import bootcamp.kakao.community.platform.images.post_images.domain.repository.Po
 import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -18,6 +19,7 @@ public class PostImageService implements PostImageUseCase {
 
     /// 게시글에 이미지 저장
     @Override
+    @Transactional
     public PostImage savePostImage(Post post, Image image) {
 
         /// 게시글 이미지 저장하기
@@ -28,7 +30,9 @@ public class PostImageService implements PostImageUseCase {
     }
 
     /// 게시글에 여러개 이미지 저장
+    /// PostImage의 of를 통해 이미지 사용이 확정된다.
     @Override
+    @Transactional
     public List<PostImage> savePostImage(Post post, List<Image> images) {
 
         /// List 형식 극복하기
@@ -43,6 +47,7 @@ public class PostImageService implements PostImageUseCase {
 
     /// 게시글의 여러개 이미지 조회
     @Override
+    @Transactional(readOnly = true)
     public List<PostImage> loadPostImages(Post post) {
         return repository.findByPost(post);
     }

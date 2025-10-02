@@ -1,9 +1,18 @@
 package bootcamp.kakao.community.platform.posts.post.presentation;
 
+import bootcamp.kakao.community.common.response.ApiResponse;
+import bootcamp.kakao.community.common.response.paging.SliceRequest;
+import bootcamp.kakao.community.common.response.paging.SliceResponse;
 import bootcamp.kakao.community.platform.posts.post.application.PostUseCase;
+import bootcamp.kakao.community.platform.posts.post.application.dto.PostDetailResponse;
+import bootcamp.kakao.community.platform.posts.post.application.dto.PostListResponse;
+import bootcamp.kakao.community.platform.posts.post.application.dto.PostRequest;
+import bootcamp.kakao.community.platform.posts.post.application.dto.PostUpdateRequest;
+import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v1/posts")
@@ -12,4 +21,66 @@ public class PostApi {
 
     private final PostUseCase service;
 
+    /// 글 작성
+    @PostMapping
+    public ApiResponse<Void> createPost(
+            @RequestBody @Valid PostRequest request,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        /// 서비스 작성
+        service.create(request, customUserDetails.getId());
+
+        /// 리턴
+        return ApiResponse.created();
+    }
+
+    /// 글 상세 조회
+    @GetMapping("/{postId}")
+    public ApiResponse<PostDetailResponse> readPost(@PathVariable Long postId) {
+
+        /// 서비스 읽기
+        PostDetailResponse response = service.getPost(postId);
+
+        /// 리턴
+        return ApiResponse.ok(response);
+    }
+
+
+    /// 글 목록 조회
+    @GetMapping()
+    public ApiResponse<SliceResponse<PostListResponse>> readPosts(SliceRequest sliceRequest) {
+
+        /// 서비스 읽기
+        SliceResponse<PostListResponse> response = service.getPosts(sliceRequest);
+
+        /// 리턴
+        return ApiResponse.ok(response);
+    }
+
+
+    /// 글 수정
+    @PatchMapping("/{postId}")
+    public ApiResponse<Void> updatePost(
+            @RequestBody @Valid PostUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        /// 서비스 수정
+        service.update(request, customUserDetails.getId());
+
+        /// 리턴
+        return ApiResponse.updated();
+    }
+
+    /// 글 삭제 (소프트 삭제)
+    @PutMapping("/{postId}")
+    public ApiResponse<Void> delete(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        /// 서비스 삭제
+        service.delete(postId, customUserDetails.getId());
+
+        /// 리턴
+        return ApiResponse.deleted();
+    }
 }
