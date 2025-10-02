@@ -28,6 +28,9 @@ public class Post extends BaseTimeEntity {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @Column(length = 1000)
+    private String thumbnailUrl;
+
     @Column(nullable = false)
     private String title;
 
@@ -43,7 +46,7 @@ public class Post extends BaseTimeEntity {
 
     /// 빌더 생성자
     @Builder
-    protected Post(User user, Category category, String title, String content) {
+    protected Post(User user, Category category, String title, String content, String thumbnailUrl) {
 
         /// 예외 처리
         if (user == null) {
@@ -63,17 +66,19 @@ public class Post extends BaseTimeEntity {
         this.category = category;
         this.title = title;
         this.content = content;
+        this.thumbnailUrl = thumbnailUrl;
         this.deleted = false;
         this.postStat = new PostStat();
     }
 
     /// 정적 팩토리 메서드
-    public static Post of(User user, Category category, String title, String content) {
+    public static Post of(User user, Category category, String title, String content, String thumbnailUrl) {
         return Post.builder()
                 .user(user)
                 .category(category)
                 .title(title)
                 .content(content)
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
 
