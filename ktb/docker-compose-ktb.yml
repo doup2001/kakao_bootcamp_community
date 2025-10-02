@@ -1,0 +1,22 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: ktb-mysql
+    volumes:
+      - ./mysql/conf.d/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./mysql/data:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+
+  # Redis
+  redis:
+    image: redis:7.2.5
+    container_name: ktb-redis
+    ports:
+      - '6379:6379'
