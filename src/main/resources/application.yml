@@ -36,6 +36,6 @@ auth:
   jwt:
     secret: 434c9b82d45b066aa3d793bbde37c6fe2bc2ac1a538c5fb2736519f96f205d86
     access:
-      expiration: 86400000 # 1일
+      expiration: 300 # 5분
     refresh:
-      expiration: 604800000 # 7일
+      expiration: 604800 # 7일
