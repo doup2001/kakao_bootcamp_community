@@ -39,3 +39,14 @@ auth:
       expiration: 86400000 # 1일
     refresh:
       expiration: 604800000 # 7일
+
+#### AWS
+cloud:
+  aws:
+    credentials:
+      access-key: ${ACCESS_KEY}
+      secret-key: ${SECRET_KEY}
+    S3:
+      bucket: ${BUCKET}
+    region:
+      static: ${STATIC}
