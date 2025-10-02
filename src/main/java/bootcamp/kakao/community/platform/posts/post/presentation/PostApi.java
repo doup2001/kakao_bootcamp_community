@@ -8,6 +8,7 @@ import bootcamp.kakao.community.platform.posts.post.application.dto.PostDetailRe
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostListResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostRequest;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostUpdateRequest;
+import bootcamp.kakao.community.platform.posts.post.presentation.swagger.PostApiSpec;
 import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/posts")
 @RequiredArgsConstructor
-public class PostApi {
+public class PostApi implements PostApiSpec {
 
     private final PostUseCase service;
 

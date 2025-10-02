@@ -14,7 +14,6 @@ import java.util.List;
  */
 public record PostRequest(
 
-        @NotNull
         @NotNull(message = "카테고리없이 게시글을 작성할 수 없습니다.")
         Long categoryId,
 
