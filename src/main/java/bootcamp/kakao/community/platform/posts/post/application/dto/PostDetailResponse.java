@@ -34,7 +34,7 @@ public record PostDetailResponse(
         @Schema(description = "댓글수", example = "37")
         int commentCount,
 
-        @Schema(description = "이미지 목록", example = "[{\"imageUrl\": \"https://sample.com/image1.png\"}]")
+        @Schema(description = "이미지 목록", example = "[{\"thumbnailUrl\": \"https://sample.com/image1.png\"}]")
         List<PostImageResponse> image,
 
         @Schema(description = "좋아요 여부", example = "true")

@@ -38,7 +38,8 @@ public class CategoryService implements CategoryUseCase{
     //  외부 사용 로직
     // =================
     @Override
+    @Transactional(readOnly = true)
     public Optional<Category> getCategory(Long id) {
-        return Optional.empty();
+        return repository.findById(id);
     }
 }
