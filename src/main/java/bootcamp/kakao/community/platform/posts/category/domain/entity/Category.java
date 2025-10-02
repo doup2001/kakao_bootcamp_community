@@ -21,7 +21,7 @@ public class Category {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     /// 빌더 생성자
