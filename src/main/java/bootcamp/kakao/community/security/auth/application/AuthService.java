@@ -13,6 +13,7 @@ import bootcamp.kakao.community.security.jwt.filter.JwtAuthenticationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -35,6 +36,7 @@ public class AuthService implements AuthUseCase {
 
     /// 로그인
     @Override
+    @Transactional(readOnly = true)
     public JwtTokenResponse login(LoginRequest request, String deviceType) {
 
         /// DB 검증
@@ -57,7 +59,12 @@ public class AuthService implements AuthUseCase {
 
     /// 로그아웃
     @Override
+    @Transactional(readOnly = true)
     public void logout(Long userId, String deviceType, Optional<String> refreshToken) {
+
+        /// DB 검증
+        User user = repository.findByIdAndDeletedIsFalse(userId)
+                .orElseThrow(() -> new NoSuchElementException("해당 고유번호를 가진 유저가 없습니다"));
 
         /// 없다면 예외처리
         if (refreshToken.isEmpty()) {
@@ -70,6 +77,7 @@ public class AuthService implements AuthUseCase {
 
     /// 토큰 재발급
     @Override
+    @Transactional(readOnly = true)
     public JwtTokenResponse reissue(String deviceType, Optional<String> refreshToken) {
 
         /// 없다면 예외처리
@@ -92,4 +100,5 @@ public class AuthService implements AuthUseCase {
         return JwtTokenResponse.of(newAccessToken, null);
     }
 }
+
 

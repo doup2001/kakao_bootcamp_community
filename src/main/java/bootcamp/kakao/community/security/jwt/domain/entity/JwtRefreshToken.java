@@ -30,7 +30,7 @@ public class JwtRefreshToken {
     @Indexed
     private String deviceType;
 
-    @TimeToLive(unit = TimeUnit.DAYS)
+    @TimeToLive(unit = TimeUnit.SECONDS)
     private long expireTime;
 
     /// 빌더 생성자
