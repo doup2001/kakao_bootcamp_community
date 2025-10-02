@@ -37,10 +37,16 @@ public class PostApi implements PostApiSpec {
 
     /// 글 상세 조회
     @GetMapping("/{postId}")
-    public ApiResponse<PostDetailResponse> readPost(@PathVariable Long postId) {
+    public ApiResponse<PostDetailResponse> readPost(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+
+        /// 유저가 없다면 null 저장
+        Long userId = customUserDetails != null ? customUserDetails.getId() : null;
 
         /// 서비스 읽기
-        PostDetailResponse response = service.getPost(postId);
+        PostDetailResponse response = service.getPost(postId, userId);
 
         /// 리턴
         return ApiResponse.ok(response);
@@ -49,10 +55,12 @@ public class PostApi implements PostApiSpec {
 
     /// 글 목록 조회
     @GetMapping()
-    public ApiResponse<SliceResponse<PostListResponse>> readPosts(SliceRequest sliceRequest) {
+    public ApiResponse<SliceResponse<PostListResponse>> readPosts(
+            SliceRequest sliceRequest,
+            @RequestParam Long categoryId) {
 
         /// 서비스 읽기
-        SliceResponse<PostListResponse> response = service.getPosts(sliceRequest);
+        SliceResponse<PostListResponse> response = service.getPosts(sliceRequest, categoryId);
 
         /// 리턴
         return ApiResponse.ok(response);

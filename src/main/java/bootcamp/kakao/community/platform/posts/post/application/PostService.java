@@ -18,6 +18,7 @@ import bootcamp.kakao.community.platform.posts.post.domain.repository.PostReposi
 import bootcamp.kakao.community.platform.user.application.UserUseCase;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -47,18 +48,26 @@ public class PostService implements PostUseCase{
     public void create(PostRequest req, Long userId) {
 
         /// 카테고리 예외처리
-        Category category = categoryService.getCategory(req.categoryId())
-                .orElseThrow(NoSuchElementException::new);
+        Category category = loadCategory(req.categoryId());
 
         /// 유저 예외처리
         User user = loadUser(userId);
 
-        /// 게시글 객체 생성 및 저장 (영속성 컨테이너)
-        var reqPost = Post.of(user, category, req.title(), req.content());
-        Post post = repository.save(reqPost);
-
-        /// 실제 이미지가 있는지, 불러오기 (영속성 컨테이너)
+        /// 요청한 실제 이미지가 있는지, 불러오기 (영속성 컨테이너)
         List<Image> image = imageService.getImage(req.imageUrls());
+
+        String thumbnailUrl = null;
+
+        /// 존재한다면
+        if (!image.isEmpty()) {
+            /// 썸네일 추출
+            Image thumbnailImage = image.get(0);
+            thumbnailUrl = thumbnailImage.getUrl();
+        }
+
+        /// 게시글 객체 생성 및 저장 (영속성 컨테이너)
+        var reqPost = Post.of(user, category, req.title(), req.content(), thumbnailUrl);
+        Post post = repository.save(reqPost);
 
         /// 이미지 저장 (영속성 컨테이너에 저장하기), 생성과 함께 Image의 사용이 확정된다.
         postImageService.savePostImage(post, image);
@@ -66,10 +75,27 @@ public class PostService implements PostUseCase{
     }
 
 
+
+
     /// 게시글 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public SliceResponse<PostListResponse> getPosts(SliceRequest req) {
+    public SliceResponse<PostListResponse> getPosts(SliceRequest req, Long categoryId) {
+
+        /// 카테고리 예외처리
+        Category category = loadCategory(categoryId);
+
+        /// 요청에 따라서 목록 조회
+        Slice<Post> posts = repository.findPostsByCursor(req, category.getName(), false);
+
+        /// DTO 변화
+        Slice<PostListResponse> response = PostListResponse.from(posts);
+        return SliceResponse.from(response);
+    }
+
+    /// 인기 게시글 목록 조회
+    @Override
+    public SliceResponse<PostListResponse> getFavoritePosts(SliceRequest req) {
         return null;
     }
 
@@ -77,12 +103,12 @@ public class PostService implements PostUseCase{
     /// 조회수가 상승해야한다.
     @Override
     @Transactional(readOnly = true)
-    public PostDetailResponse getPost(Long postId) {
+    public PostDetailResponse getPost(Long postId, Long userId) {
 
-        /// 게시글 상세 조회
+        /// 게시글 DB 조회
         Post post = loadPost(postId);
 
-        /// 게시글 이미지에서 조회하기
+        /// 게시글 이미지 조회하기
         List<PostImage> images = postImageService.loadPostImages(post);
 
         /// 조회했기에, 레디스에서 조회수 증가시키기
@@ -92,11 +118,27 @@ public class PostService implements PostUseCase{
         /// 레디스에서 조회 수, 댓글 수,좋아요 수를 가져와야한다.
         // TODO! 레디스에서 값 가져오기
 
-        /// 응답
-        return PostDetailResponse.from(post, images);
+        /// 비회원이 조회했다면
+        if (userId == null) {
 
+            /// 게시글의 정보만 전달하면 된다.
+            return PostDetailResponse.from(post, images);
+
+        } else {
+
+            /// 회원이 조회했다면,
+            User user = loadUser(userId);
+
+            /// 좋아요 여부 조회
+
+            /// 편집 가능 여부 조회
+            /// ID는 프록시 객체이기에 getUser의 Id를 해도 지연로딩이 발생하지않음!, 성능만 문제 X
+            boolean editable = post.getUser().getId().equals(user.getId());
+
+            /// 응답
+            return PostDetailResponse.from(post, images, false, editable);
+        }
     }
-
 
 
     /// 게시글 수정
@@ -150,11 +192,16 @@ public class PostService implements PostUseCase{
     @Transactional(readOnly = true)
     protected Post loadPost(Long postId) {
         return repository.findByIdAndDeletedIsFalse(postId)
-                .orElseThrow(NoSuchElementException::new);
+                .orElseThrow(() -> new NoSuchElementException("해당 아이디가 존재하는 게시글이 없습니다."));
     }
 
     private User loadUser(Long userId) {
         return userService.getUser(userId)
+                .orElseThrow(() -> new NoSuchElementException("해당 아이디가 존재하는 유저가 없습니다."));
+    }
+
+    private Category loadCategory(Long categoryId) {
+        return categoryService.getCategory(categoryId)
                 .orElseThrow(NoSuchElementException::new);
     }
 }

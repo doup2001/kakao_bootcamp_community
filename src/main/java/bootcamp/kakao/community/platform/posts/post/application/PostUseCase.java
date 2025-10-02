@@ -9,14 +9,17 @@ import bootcamp.kakao.community.platform.posts.post.application.dto.PostUpdateRe
 
 public interface PostUseCase {
 
-    /// 글 작성자
+    /// 글 작성
     void create(PostRequest req, Long userId);
 
-    /// 목록 조회하기
-    SliceResponse<PostListResponse> getPosts(SliceRequest req);
+    /// 목록 조회하기 (카테고리 기반)
+    SliceResponse<PostListResponse> getPosts(SliceRequest req, Long categoryId);
+
+    /// 목록 조회하기 (인기 기반)
+    SliceResponse<PostListResponse> getFavoritePosts(SliceRequest req);
 
     /// 상세 조회하기
-    PostDetailResponse getPost(Long postId);
+    PostDetailResponse getPost(Long postId, Long userId);
 
     /// 게시글 수정하기
     void update(PostUpdateRequest req, Long userId);

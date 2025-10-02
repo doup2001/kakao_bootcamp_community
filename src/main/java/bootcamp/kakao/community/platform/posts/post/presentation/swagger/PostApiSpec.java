@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "게시글 API", description = "게시글 관련 API 입니다.")
 public interface PostApiSpec {
@@ -33,7 +34,8 @@ public interface PostApiSpec {
             summary = "게시글 상세 조회 API",
             description = "게시글을 조회하는 API 입니다."
     )
-    ApiResponse<PostDetailResponse> readPost(@PathVariable Long postId);
+    ApiResponse<PostDetailResponse> readPost(@PathVariable Long postId,
+                                             @AuthenticationPrincipal CustomUserDetails customUserDetails);
 
 
     /// 글 목록 조회
@@ -41,7 +43,9 @@ public interface PostApiSpec {
             summary = "게시글 목록 조회 API",
             description = "게시글 목록을 조회하는 API 입니다."
     )
-    ApiResponse<SliceResponse<PostListResponse>> readPosts(SliceRequest sliceRequest);
+    ApiResponse<SliceResponse<PostListResponse>> readPosts(
+            SliceRequest sliceRequest,
+            @RequestParam Long categoryId);
 
 
     /// 글 수정
