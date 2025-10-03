@@ -88,7 +88,7 @@ public class Post extends BaseTimeEntity {
     }
 
     /// 수정
-    public void update(String title, String content) {
+    public void update(String title, String content, String thumbnailUrl) {
 
         if (title != null) {
             /// 제목을 수정할 내용이 존재한다면,
@@ -97,6 +97,11 @@ public class Post extends BaseTimeEntity {
         if (content != null) {
             /// 내용을 수정할 내용이 존재한다면,
             this.content = content;
+        }
+
+        if (thumbnailUrl != null) {
+            /// 바꿀 썸네일이 존재한다면,
+            this.thumbnailUrl = thumbnailUrl;
         }
     }
 

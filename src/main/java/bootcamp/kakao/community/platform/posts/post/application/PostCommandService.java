@@ -1,7 +1,5 @@
 package bootcamp.kakao.community.platform.posts.post.application;
 
-import bootcamp.kakao.community.platform.images.image.application.ImageUseCase;
-import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 import bootcamp.kakao.community.platform.images.post_images.application.PostImageUseCase;
 import bootcamp.kakao.community.platform.posts.category.application.CategoryUseCase;
 import bootcamp.kakao.community.platform.posts.category.domain.entity.Category;
@@ -16,7 +14,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -30,7 +27,6 @@ public class PostCommandService implements PostCommandUseCase{
     private final CategoryUseCase categoryService;
 
     /// 이미지
-    private final ImageUseCase imageService;
     private final PostImageUseCase postImageService;
 
     /// 게시글 작성, 다중 이미지 고려해서 작성
@@ -44,16 +40,13 @@ public class PostCommandService implements PostCommandUseCase{
         /// 유저 예외처리
         User user = loadUser(userId);
 
-        /// 요청한 실제 이미지가 있는지, 불러오기 (영속성 컨테이너)
-        List<Image> image = imageService.getImage(req.imageUrls());
-
+        /// 썸네일
         String thumbnailUrl = null;
 
         /// 존재한다면
-        if (!image.isEmpty()) {
+        if (!req.imageUrls().isEmpty()) {
             /// 썸네일 추출
-            Image thumbnailImage = image.get(0);
-            thumbnailUrl = thumbnailImage.getUrl();
+            thumbnailUrl = req.imageUrls().get(0);
         }
 
         /// 게시글 객체 생성 및 저장 (영속성 컨테이너)
@@ -61,7 +54,8 @@ public class PostCommandService implements PostCommandUseCase{
         Post post = repository.save(reqPost);
 
         /// 이미지 저장 (영속성 컨테이너에 저장하기), 생성과 함께 Image의 사용이 확정된다.
-        postImageService.savePostImage(post, image);
+        /// 하나라도 에러나면, 롤백 처리
+        postImageService.savePostImage(post, req.imageUrls());
 
     }
 
@@ -83,8 +77,11 @@ public class PostCommandService implements PostCommandUseCase{
             throw new AccessDeniedException("수정할 권한이 없습니다.");
         }
 
+        /// 게시글 이미지 조회하기 (영속성 컨텍스트)
+        String thumbnail = postImageService.updatePostImages(post, req.imageUrls());
+
         /// 게시글 수정
-        post.update(req.title(), req.content());
+        post.update(req.title(), req.content(), thumbnail);
 
     }
 

@@ -77,5 +77,18 @@ public class Image extends BaseTimeEntity {
         this.isConfirmed = true;
     }
 
+    // 사용을 취소하는 메서드
+    public void unConfirm() {
+
+        /// 예외처리
+        if (this.user == null) {
+            throw new IllegalStateException("사용자 정보가 없는 이미지는 취소할 수 없습니다.");
+        }
+
+        /// 사용중이던 것만 취소 가능
+        if (this.isConfirmed) {
+            this.isConfirmed = false;
+        }
+    }
 
 }
