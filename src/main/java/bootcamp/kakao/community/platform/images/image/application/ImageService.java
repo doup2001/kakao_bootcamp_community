@@ -34,7 +34,7 @@ public class ImageService implements ImageUseCase {
     public ImageResponse upload(ImageRequest req, Long userId) throws IOException {
 
         /// 요청한 유저
-        User user = userService.loadUser(userId).orElseThrow(NoSuchElementException::new);
+        User user = userService.loadUser(userId);
 
         /// 클라우드 요청
         ImageResponse presignedURL = cloudService.getUploadPresignedURL(req.file());
@@ -53,7 +53,7 @@ public class ImageService implements ImageUseCase {
     public List<ImageResponse> upload(List<ImageRequest> req, Long userId) throws IOException {
 
         /// 요청한 유저
-        User user = userService.loadUser(userId).orElseThrow(NoSuchElementException::new);
+        User user = userService.loadUser(userId);
 
         /// 요청한 이미지 목록 추출
         List<String> reqImages = req.stream()

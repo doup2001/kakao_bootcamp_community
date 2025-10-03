@@ -11,5 +11,5 @@ public interface CategoryUseCase{
     void createCategory(CategoryRequest req);
 
     /// 외부 로직
-    Optional<Category> loadCategory(Long id);
+    Category loadCategory(Long id);
 }

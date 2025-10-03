@@ -21,6 +21,6 @@ public interface UserUseCase {
     void withdraw(Long userId);
 
     /// 외부 함수
-    Optional<User> loadUser(Long userId);
+    User loadUser(Long userId);
 
 }

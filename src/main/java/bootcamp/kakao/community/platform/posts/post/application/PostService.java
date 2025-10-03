@@ -95,6 +95,7 @@ public class PostService implements PostUseCase{
 
     /// 인기 게시글 목록 조회
     @Override
+    @Transactional(readOnly = true)
     public SliceResponse<PostListResponse> getFavoritePosts(SliceRequest req) {
         return null;
     }
@@ -186,22 +187,24 @@ public class PostService implements PostUseCase{
     }
 
     // =================
-    //  내부 로직
+    //  외부 사용 로직
     // =================
-
     @Transactional(readOnly = true)
-    protected Post loadPost(Long postId) {
+    public Post loadPost(Long postId) {
         return repository.findByIdAndDeletedIsFalse(postId)
                 .orElseThrow(() -> new NoSuchElementException("해당 아이디가 존재하는 게시글이 없습니다."));
     }
 
+
+    // =================
+    //  내부 로직
+    // =================
+
     private User loadUser(Long userId) {
-        return userService.getUser(userId)
-                .orElseThrow(() -> new NoSuchElementException("해당 아이디가 존재하는 유저가 없습니다."));
+        return userService.loadUser(userId);
     }
 
     private Category loadCategory(Long categoryId) {
-        return categoryService.getCategory(categoryId)
-                .orElseThrow(NoSuchElementException::new);
+        return categoryService.loadCategory(categoryId);
     }
 }

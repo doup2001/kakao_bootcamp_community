@@ -6,6 +6,7 @@ import bootcamp.kakao.community.platform.posts.post.application.dto.PostDetailRe
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostRequest;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostListResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostUpdateRequest;
+import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
 
 public interface PostUseCase {
 
@@ -26,5 +27,8 @@ public interface PostUseCase {
 
     /// 게시글 삭제하기
     void delete(Long postId, Long userId);
+
+    /// 외부사용
+    Post loadPost(Long postId);
 
 }

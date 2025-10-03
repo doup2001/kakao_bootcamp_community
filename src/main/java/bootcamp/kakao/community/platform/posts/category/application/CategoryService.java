@@ -39,7 +39,8 @@ public class CategoryService implements CategoryUseCase{
     // =================
     @Override
     @Transactional(readOnly = true)
-    public Optional<Category> loadCategory(Long id) {
-        return repository.findById(id);
+    public Category loadCategory(Long id) {
+        return repository.findById(id)
+                .orElseThrow(NoSuchElementException::new);
     }
 }
