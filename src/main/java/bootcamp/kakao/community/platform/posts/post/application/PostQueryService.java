@@ -3,24 +3,20 @@ package bootcamp.kakao.community.platform.posts.post.application;
 import bootcamp.kakao.community.common.response.paging.SliceRequest;
 import bootcamp.kakao.community.common.response.paging.SliceResponse;
 import bootcamp.kakao.community.common.util.KeyUtil;
-import bootcamp.kakao.community.platform.images.image.application.ImageUseCase;
-import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 import bootcamp.kakao.community.platform.images.post_images.application.PostImageUseCase;
 import bootcamp.kakao.community.platform.images.post_images.domain.entity.PostImage;
 import bootcamp.kakao.community.platform.posts.category.application.CategoryUseCase;
 import bootcamp.kakao.community.platform.posts.category.domain.entity.Category;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostDetailResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostListResponse;
-import bootcamp.kakao.community.platform.posts.post.application.dto.PostRequest;
-import bootcamp.kakao.community.platform.posts.post.application.dto.PostUpdateRequest;
 import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
 import bootcamp.kakao.community.platform.posts.post.domain.repository.PostRepository;
+import bootcamp.kakao.community.platform.posts.post_likes.application.PostLikeUseCase;
 import bootcamp.kakao.community.platform.user.application.UserUseCase;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +25,7 @@ import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements PostUseCase{
+public class PostQueryService implements PostQueryUseCase{
 
     private final PostRepository repository;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -39,43 +35,10 @@ public class PostService implements PostUseCase{
     private final CategoryUseCase categoryService;
 
     /// 이미지
-    private final ImageUseCase imageService;
     private final PostImageUseCase postImageService;
 
-    /// 게시글 작성, 다중 이미지 고려해서 작성
-    @Override
-    @Transactional
-    public void create(PostRequest req, Long userId) {
-
-        /// 카테고리 예외처리
-        Category category = loadCategory(req.categoryId());
-
-        /// 유저 예외처리
-        User user = loadUser(userId);
-
-        /// 요청한 실제 이미지가 있는지, 불러오기 (영속성 컨테이너)
-        List<Image> image = imageService.getImage(req.imageUrls());
-
-        String thumbnailUrl = null;
-
-        /// 존재한다면
-        if (!image.isEmpty()) {
-            /// 썸네일 추출
-            Image thumbnailImage = image.get(0);
-            thumbnailUrl = thumbnailImage.getUrl();
-        }
-
-        /// 게시글 객체 생성 및 저장 (영속성 컨테이너)
-        var reqPost = Post.of(user, category, req.title(), req.content(), thumbnailUrl);
-        Post post = repository.save(reqPost);
-
-        /// 이미지 저장 (영속성 컨테이너에 저장하기), 생성과 함께 Image의 사용이 확정된다.
-        postImageService.savePostImage(post, image);
-
-    }
-
-
-
+    /// 좋아요 여부 파악
+    private final PostLikeUseCase likeUseCase;
 
     /// 게시글 목록 조회
     @Override
@@ -131,74 +94,26 @@ public class PostService implements PostUseCase{
             User user = loadUser(userId);
 
             /// 좋아요 여부 조회
+            boolean liked = likeUseCase.isLiked(postId, userId);
 
             /// 편집 가능 여부 조회
             /// ID는 프록시 객체이기에 getUser의 Id를 해도 지연로딩이 발생하지않음!, 성능만 문제 X
             boolean editable = post.getUser().getId().equals(user.getId());
 
             /// 응답
-            return PostDetailResponse.from(post, images, false, editable);
+            return PostDetailResponse.from(post, images, liked, editable);
         }
-    }
-
-
-    /// 게시글 수정
-    /// 더티체킹으로 실행
-    @Override
-    @Transactional
-    public void update(PostUpdateRequest req, Long userId) {
-
-        /// 게시글 상세 조회 (영속성 컨테이너에 스냅샷)
-        Post post = loadPost(req.id());
-
-        /// 유저 예외 처리
-        User user = loadUser(userId);
-
-        /// 동일 유저인지 체크
-        if (!post.getUser().getId().equals(user.getId())){
-            throw new AccessDeniedException("수정할 권한이 없습니다.");
-        }
-
-        /// 게시글 수정
-        post.update(req.title(), req.content());
-
-    }
-
-    /// 게시글 소프트삭제
-    /// 더티체킹으로 실행
-    @Override
-    @Transactional
-    public void delete(Long postId, Long userId) {
-
-        /// 게시글 상세 조회 (영속성 컨테이너에 스냅샷)
-        Post post = loadPost(postId);
-
-        /// 유저 예외 처리 (softDELETE 여부 체크)
-        User user = loadUser(userId);
-
-        /// 동일 유저인지 체크
-        if (!post.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedException("삭제할 권한이 없습니다.");
-        }
-
-        /// 게시글 수정
-        post.delete();
-
-    }
-
-    // =================
-    //  외부 사용 로직
-    // =================
-    @Transactional(readOnly = true)
-    public Post loadPost(Long postId) {
-        return repository.findByIdAndDeletedIsFalse(postId)
-                .orElseThrow(() -> new NoSuchElementException("해당 아이디가 존재하는 게시글이 없습니다."));
     }
 
 
     // =================
     //  내부 로직
     // =================
+    @Transactional(readOnly = true)
+    protected Post loadPost(Long postId) {
+        return repository.findByIdAndDeletedIsFalse(postId)
+                .orElseThrow(() -> new NoSuchElementException("해당 아이디가 존재하는 게시글이 없습니다."));
+    }
 
     private User loadUser(Long userId) {
         return userService.loadUser(userId);
@@ -207,4 +122,5 @@ public class PostService implements PostUseCase{
     private Category loadCategory(Long categoryId) {
         return categoryService.loadCategory(categoryId);
     }
+
 }

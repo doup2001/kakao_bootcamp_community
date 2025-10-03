@@ -3,7 +3,8 @@ package bootcamp.kakao.community.platform.posts.post.presentation;
 import bootcamp.kakao.community.common.response.ApiResponse;
 import bootcamp.kakao.community.common.response.paging.SliceRequest;
 import bootcamp.kakao.community.common.response.paging.SliceResponse;
-import bootcamp.kakao.community.platform.posts.post.application.PostUseCase;
+import bootcamp.kakao.community.platform.posts.post.application.PostCommandUseCase;
+import bootcamp.kakao.community.platform.posts.post.application.PostQueryUseCase;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostDetailResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostListResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostRequest;
@@ -20,7 +21,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PostApi implements PostApiSpec {
 
-    private final PostUseCase service;
+    private final PostCommandUseCase commandService;
+    private final PostQueryUseCase queryService;
 
     /// 글 작성
     @PostMapping
@@ -29,7 +31,7 @@ public class PostApi implements PostApiSpec {
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         /// 서비스 작성
-        service.create(request, customUserDetails.getId());
+        commandService.create(request, customUserDetails.getId());
 
         /// 리턴
         return ApiResponse.created();
@@ -46,7 +48,7 @@ public class PostApi implements PostApiSpec {
         Long userId = customUserDetails != null ? customUserDetails.getId() : null;
 
         /// 서비스 읽기
-        PostDetailResponse response = service.getPost(postId, userId);
+        PostDetailResponse response = queryService.getPost(postId, userId);
 
         /// 리턴
         return ApiResponse.ok(response);
@@ -60,7 +62,7 @@ public class PostApi implements PostApiSpec {
             @RequestParam Long categoryId) {
 
         /// 서비스 읽기
-        SliceResponse<PostListResponse> response = service.getPosts(sliceRequest, categoryId);
+        SliceResponse<PostListResponse> response = queryService.getPosts(sliceRequest, categoryId);
 
         /// 리턴
         return ApiResponse.ok(response);
@@ -74,7 +76,7 @@ public class PostApi implements PostApiSpec {
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         /// 서비스 수정
-        service.update(request, customUserDetails.getId());
+        commandService.update(request, customUserDetails.getId());
 
         /// 리턴
         return ApiResponse.updated();
@@ -87,7 +89,7 @@ public class PostApi implements PostApiSpec {
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         /// 서비스 삭제
-        service.delete(postId, customUserDetails.getId());
+        commandService.delete(postId, customUserDetails.getId());
 
         /// 리턴
         return ApiResponse.deleted();
