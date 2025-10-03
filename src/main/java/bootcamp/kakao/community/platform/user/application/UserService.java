@@ -92,7 +92,7 @@ public class UserService implements UserUseCase{
     // =================
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getUser(Long userId) {
+    public Optional<User> loadUser(Long userId) {
         return repository.findByIdAndDeletedIsFalse(userId);
     }
 

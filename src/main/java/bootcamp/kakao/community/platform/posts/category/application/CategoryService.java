@@ -39,7 +39,7 @@ public class CategoryService implements CategoryUseCase{
     // =================
     @Override
     @Transactional(readOnly = true)
-    public Optional<Category> getCategory(Long id) {
+    public Optional<Category> loadCategory(Long id) {
         return repository.findById(id);
     }
 }
