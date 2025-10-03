@@ -2,7 +2,7 @@ package bootcamp.kakao.community.platform.posts.post.domain.repository;
 
 import bootcamp.kakao.community.common.response.paging.SliceRequest;
 import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
-import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -58,28 +58,34 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
     }
 
     /// id < 첫 번째 조회에서는 파라미터를 사용하지 않기 위한 동적 쿼리
-    private BooleanExpression ltLastId(Long lastId) {
+    private BooleanBuilder ltLastId(Long lastId) {
+
+        BooleanBuilder builder = new BooleanBuilder();
 
         if (lastId == null) {
             /// BooleanExpression 자리에 null이 반환되면 조건문에서 자동을 제외된다.
             return null;
         }
-        return post.id.lt(lastId);
+        return builder.and(post.id.lt(lastId));
     }
 
     /// 카테고리
-    private BooleanExpression eqCategory(String category) {
+    private BooleanBuilder eqCategory(String category) {
+
+        BooleanBuilder builder = new BooleanBuilder();
 
         if (category == null) {
             /// BooleanExpression 자리에 null이 반환되면 조건문에서 자동을 제외된다.
             return null;
         }
-        return post.category.name.eq(category);
+        return builder.and(post.category.name.eq(category));
     }
 
-    private BooleanExpression eqDeleted(boolean deleted) {
+    private BooleanBuilder eqDeleted(boolean deleted) {
 
-        return post.deleted.eq(deleted);
+        BooleanBuilder builder = new BooleanBuilder();
+
+        return builder.and(post.deleted.eq(deleted));
     }
 
 }
