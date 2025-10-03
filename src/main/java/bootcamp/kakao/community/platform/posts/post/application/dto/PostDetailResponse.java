@@ -16,6 +16,9 @@ import java.util.*;
 public record PostDetailResponse(
         UserResponse author,
 
+        @Schema(description = "게시글 ID", example = "1")
+        Long id,
+
         @Schema(description = "카테고리", example = "Q&A")
         String category,
 
@@ -57,6 +60,7 @@ public record PostDetailResponse(
         var stat = post.getPostStat();
 
         return PostDetailResponse.builder()
+                .id(post.getId())
                 .author(UserResponse.from(post.getUser()))
                 .category(post.getCategory().getName())
                 .title(post.getTitle())

@@ -18,6 +18,9 @@ import java.util.List;
 public record PostListResponse(
         UserResponse user,
 
+        @Schema(description = "게시글 ID", example = "1")
+        Long id,
+
         @Schema(description = "카테고리", example = "자유게시판")
         String category,
 
@@ -47,6 +50,7 @@ public record PostListResponse(
         var stat = post.getPostStat();
 
         return PostListResponse.builder()
+                .id(post.getId())
                 .user(UserResponse.from(post.getUser()))
                 .category(post.getCategory().getName())
                 .thumbnailUrl(post.getThumbnailUrl())
