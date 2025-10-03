@@ -38,7 +38,4 @@ public class Category {
                 .name(name)
                 .build();
     }
-
-    /// 비즈니스 로직
-
 }
