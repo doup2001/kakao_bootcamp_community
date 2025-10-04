@@ -57,4 +57,19 @@ public class Comment extends BaseTimeEntity {
                 .content(content)
                 .build();
     }
+
+    /// 비즈니스 로직
+    public void delete() {
+        this.deleted = true;
+    }
+
+    /// 업데이트
+    public void update(String content) {
+
+        if (content == null) {
+            throw new IllegalArgumentException("수정할 내용이 존재하지 않습니다.");
+        }
+
+        this.content = content;
+    }
 }

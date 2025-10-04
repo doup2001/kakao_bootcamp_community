@@ -1,8 +1,7 @@
 package bootcamp.kakao.community.platform.posts.comment.application.dto;
 
-public record CommentRequest(
-        Long parentId,
-        Long postId,
+public record CommentUpdateRequest(
+        Long id,
         String content
 ) {
 }

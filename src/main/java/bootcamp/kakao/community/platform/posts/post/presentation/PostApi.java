@@ -70,7 +70,7 @@ public class PostApi implements PostApiSpec {
 
 
     /// 글 수정
-    @PatchMapping("/{postId}")
+    @PatchMapping()
     public ApiResponse<Void> updatePost(
             @RequestBody @Valid PostUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {

@@ -4,6 +4,7 @@ import bootcamp.kakao.community.common.response.paging.SliceRequest;
 import bootcamp.kakao.community.common.response.paging.SliceResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostDetailResponse;
 import bootcamp.kakao.community.platform.posts.post.application.dto.PostListResponse;
+import bootcamp.kakao.community.platform.posts.post.domain.entity.Post;
 
 public interface PostQueryUseCase {
 
@@ -15,5 +16,8 @@ public interface PostQueryUseCase {
 
     /// 상세 조회하기
     PostDetailResponse getPost(Long postId, Long userId);
+
+    /// 외부사용
+    Post loadPost(Long postId);
 
 }
