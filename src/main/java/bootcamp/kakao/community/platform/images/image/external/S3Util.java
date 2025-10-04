@@ -7,8 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 
@@ -78,7 +77,6 @@ public class S3Util implements ImageCloudUseCase {
      * 이미지 삭제하기
      * @param fileName  S3에서 삭제할 이미지 이름
      */
-    @Override
     public void deleteFile(String fileName) {
 
         /// 삭제할 오브젝트 생성
@@ -99,10 +97,19 @@ public class S3Util implements ImageCloudUseCase {
     @Override
     public void deleteFile(List<String> fileNames) {
 
-        /// 반복해서 삭제
-        for (String fileName : fileNames) {
-            deleteFile(fileName);
-        }
+        /// 삭제할 객체 리스트 생성
+        List<ObjectIdentifier> objects = fileNames.stream()
+                .map(name -> ObjectIdentifier.builder().key(name).build())
+                .toList();
+
+        /// 삭제 요청 객체 생성
+        DeleteObjectsRequest request = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(Delete.builder().objects(objects).build())
+                .build();
+
+        /// 한번에 삭제
+        s3Client.deleteObjects(request);
     }
 
 }
