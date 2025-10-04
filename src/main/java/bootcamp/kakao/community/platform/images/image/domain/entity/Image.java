@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Table(name = "images")
+@Table(name = "images", indexes = @Index(name = "idx_image_url", columnList = "url"))
 public class Image extends BaseTimeEntity {
 
     @Id
