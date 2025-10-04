@@ -1,7 +1,10 @@
 package bootcamp.kakao.community.platform.user.application;
 
 import bootcamp.kakao.community.platform.user.application.dto.SignUpRequest;
+import bootcamp.kakao.community.platform.user.domain.entity.User;
 import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenResponse;
+
+import java.util.Optional;
 
 public interface UserUseCase {
 
@@ -16,5 +19,8 @@ public interface UserUseCase {
 
     /// 회원 탈퇴
     void withdraw(Long userId);
+
+    /// 외부 함수
+    User loadUser(Long userId);
 
 }

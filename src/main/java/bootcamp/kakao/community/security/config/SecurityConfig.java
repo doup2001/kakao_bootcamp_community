@@ -32,6 +32,8 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(AbstractHttpConfigurer::disable)
+                /// 인가
+                .authorizeHttpRequests(req -> req.requestMatchers("/**").permitAll())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) /// UsernamePasswordAuthenticationFilter.class 전에 실행하도록
                 .exceptionHandling(exception -> {
                     exception.authenticationEntryPoint(jwtFailureHandler)
