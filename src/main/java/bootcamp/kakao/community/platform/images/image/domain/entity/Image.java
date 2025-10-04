@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Table(name = "images")
+@Table(name = "images", indexes = @Index(name = "idx_image_url", columnList = "url"))
 public class Image extends BaseTimeEntity {
 
     @Id
@@ -29,7 +29,7 @@ public class Image extends BaseTimeEntity {
     private String url;
 
     @Column(nullable = false)
-    private boolean isConfirmed = false;
+    private boolean confirmed = false;
 
     /// 생성자
     @Builder
@@ -37,7 +37,7 @@ public class Image extends BaseTimeEntity {
         this.user = user;
         this.fileName = fileName;
         this.url = url;
-        this.isConfirmed = false;
+        this.confirmed = false;
     }
 
     /// 정적 팩토리 메서드
@@ -63,7 +63,7 @@ public class Image extends BaseTimeEntity {
     // 사용한다고 확정하는 메서드
     public void confirm(User user) {
         this.user = user;
-        this.isConfirmed = true;
+        this.confirmed = true;
     }
 
     // 사용한다고 확정하는 메서드
@@ -74,7 +74,7 @@ public class Image extends BaseTimeEntity {
             throw new IllegalStateException("사용자 정보가 없는 이미지는 확정할 수 없습니다.");
         }
 
-        this.isConfirmed = true;
+        this.confirmed = true;
     }
 
     // 사용을 취소하는 메서드
@@ -86,8 +86,8 @@ public class Image extends BaseTimeEntity {
         }
 
         /// 사용중이던 것만 취소 가능
-        if (this.isConfirmed) {
-            this.isConfirmed = false;
+        if (this.confirmed) {
+            this.confirmed = false;
         }
     }
 

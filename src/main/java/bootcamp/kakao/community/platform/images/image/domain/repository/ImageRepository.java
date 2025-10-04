@@ -12,4 +12,8 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
 
     /// 여러개 URL 바탕으로 조회
     List<Image> findAllByUrlIn(List<String> urls);
+
+    /// 사용하지 않는 이미지 모음 조회
+    List<Image> findByConfirmedFalse();
+
 }
