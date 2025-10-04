@@ -46,7 +46,7 @@ public class ReportService implements ReportUseCase {
         }
 
         /// 생성 및 저장
-        var reqReport = Report.of(user, request.type(), request.contentId());
+        var reqReport = Report.of(user, request.type(), request.contentId(), request.reason());
         reportRepository.save(reqReport);
     }
 }

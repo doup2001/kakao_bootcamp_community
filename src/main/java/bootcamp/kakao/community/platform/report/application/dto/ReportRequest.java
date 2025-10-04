@@ -4,7 +4,8 @@ import bootcamp.kakao.community.platform.report.domain.entity.ReportType;
 
 public record ReportRequest(
         ReportType type,
-        Long contentId
+        Long contentId,
+        String reason
 ) {
 
 }

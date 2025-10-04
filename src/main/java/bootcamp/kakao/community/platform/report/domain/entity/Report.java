@@ -30,20 +30,25 @@ public class Report extends BaseTimeEntity {
     @Column(nullable = false)
     private Long contentId;
 
+    @Column(nullable = false)
+    private String reason;
+
     /// 생성자
     @Builder
-    protected Report(User user, ReportType type, Long contentId) {
+    protected Report(User user, ReportType type, Long contentId, String reason) {
         this.user = user;
         this.contentId = contentId;
         this.type = type;
+        this.reason = reason;
     }
 
     /// 정적 팩토리 메서드
-    public static Report of(User user, ReportType type, Long contentId) {
+    public static Report of(User user, ReportType type, Long contentId, String reason) {
         return Report.builder()
                 .user(user)
                 .type(type)
                 .contentId(contentId)
+                .reason(reason)
                 .build();
     }
 
