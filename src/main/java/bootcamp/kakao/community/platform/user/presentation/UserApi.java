@@ -122,6 +122,7 @@ public class UserApi implements UserApiSpec {
         return ApiResponse.updated();
     }
 
+    /// 비밀번호 변경
     @PutMapping("/password")
     public ApiResponse<Void> updatePassword(@RequestBody @Valid PwUpdateRequest pwReq,
                                             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
