@@ -2,8 +2,8 @@ package bootcamp.kakao.community.platform.user.presentation;
 
 import bootcamp.kakao.community.common.response.ApiResponse;
 import bootcamp.kakao.community.platform.user.application.UserUseCase;
-import bootcamp.kakao.community.platform.user.application.dto.DuplicateResponse;
-import bootcamp.kakao.community.platform.user.application.dto.SignUpRequest;
+import bootcamp.kakao.community.platform.user.application.dto.*;
+import bootcamp.kakao.community.platform.user.presentation.swagger.UserApiSpec;
 import bootcamp.kakao.community.security.auth.domain.CustomUserDetails;
 import bootcamp.kakao.community.security.jwt.application.HttpUtil;
 import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenResponse;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/users")
 @RequiredArgsConstructor
-public class UserApi {
+public class UserApi implements UserApiSpec {
 
     /// 유저 서비스
     private final UserUseCase service;
@@ -49,9 +49,7 @@ public class UserApi {
         return ApiResponse.created();
     }
 
-    /**
-     * 유저 소프트 삭제
-     */
+    /// 유저 소프트 삭제
     @PutMapping
     public ApiResponse<Void> delete(
             HttpServletResponse httpServletResponse,
@@ -68,9 +66,7 @@ public class UserApi {
         return ApiResponse.deleted();
     }
 
-    /**
-     * 이메일 중복 체크
-     */
+    /// 이메일 중복 체크
     @GetMapping("/email")
     public ApiResponse<DuplicateResponse> checkEmail(@RequestParam String email) {
 
@@ -81,9 +77,7 @@ public class UserApi {
         return ApiResponse.ok(DuplicateResponse.of(duplicateEmail));
     }
 
-    /**
-     * 닉네임 중복 체크
-     */
+    /// 닉네임 중복 체크
     @GetMapping("/nickname")
     public ApiResponse<DuplicateResponse> checkNickName(@RequestParam String nickName) {
 
@@ -92,6 +86,51 @@ public class UserApi {
 
         /// 리턴
         return ApiResponse.ok(DuplicateResponse.of(duplicateNickName));
+    }
+
+    /// 나의 정보 조회하기
+    @GetMapping("/mypage")
+    public ApiResponse<MyPageResponse> getUser(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        /// 서비스 로직
+        MyPageResponse user = service.getUser(customUserDetails.getId());
+
+        /// 리턴
+        return ApiResponse.ok(user);
+    }
+
+    /// 다른 유저 정보 조회하기
+    @GetMapping("/{userId}")
+    public ApiResponse<UserResponse> getOtherUser(@PathVariable Long userId) {
+
+        /// 서비스 로직
+        UserResponse user = service.getOtherUser(userId);
+
+        /// 리턴
+        return ApiResponse.ok(user);
+    }
+
+    /// 나의 정보 수정하기
+    @PutMapping("/mypage")
+    public ApiResponse<Void> updateUser(@RequestBody @Valid UserUpdateRequest request,
+                                        @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        /// 서비스 로직
+        service.updateUser(request, customUserDetails.getId());
+
+        /// 리턴
+        return ApiResponse.updated();
+    }
+
+    @PutMapping("/password")
+    public ApiResponse<Void> updatePassword(@RequestBody @Valid PwUpdateRequest pwReq,
+                                            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        /// 서비스 로직
+        service.updatePassword(customUserDetails.getId(), pwReq);
+
+        /// 리턴
+        return ApiResponse.updated();
     }
 
 }

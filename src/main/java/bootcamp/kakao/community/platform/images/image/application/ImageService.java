@@ -5,8 +5,8 @@ import bootcamp.kakao.community.platform.images.image.application.dto.ImageRespo
 import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
 import bootcamp.kakao.community.platform.images.image.domain.repository.ImageRepository;
 import bootcamp.kakao.community.platform.images.image.external.ImageCloudUseCase;
-import bootcamp.kakao.community.platform.user.application.UserUseCase;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
+import bootcamp.kakao.community.platform.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +26,7 @@ public class ImageService implements ImageUseCase {
     private final ImageRepository repository;
 
     /// 의존성
-    private final UserUseCase userService;
+    private final UserRepository userRepository;
 
     /// 한 장의 이미지 처리
     @Override
@@ -34,7 +34,7 @@ public class ImageService implements ImageUseCase {
     public ImageResponse upload(ImageRequest req, Long userId) throws IOException {
 
         /// 요청한 유저
-        User user = userService.loadUser(userId);
+        User user = loadUser(userId);
 
         /// 클라우드 요청
         ImageResponse presignedURL = cloudService.getUploadPresignedURL(req.file());
@@ -47,13 +47,14 @@ public class ImageService implements ImageUseCase {
         return presignedURL;
     }
 
+
     /// 여러개의 이미지 처리
     @Override
     @Transactional
     public List<ImageResponse> upload(List<ImageRequest> req, Long userId) throws IOException {
 
         /// 요청한 유저
-        User user = userService.loadUser(userId);
+        User user = loadUser(userId);
 
         /// 요청한 이미지 목록 추출
         List<String> reqImages = req.stream()
@@ -115,6 +116,15 @@ public class ImageService implements ImageUseCase {
                 .map(url -> imageMap.getOrDefault(url, null))
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    // =============
+    //   내부 함수
+    // =============
+    @Transactional(readOnly = true)
+    protected User loadUser(Long userId) {
+        return userRepository.findByIdAndDeletedIsFalse(userId)
+                .orElseThrow(()-> new NoSuchElementException("해당 아이디를 가진 유저가 없습니다."));
     }
 
 }

@@ -64,8 +64,28 @@ public class User extends BaseTimeEntity {
     }
 
     /// 비즈니스 로직
+    /// 삭제
     public void delete() {
         this.deleted = true;
+    }
+
+    /// 업데이트
+    public void update(String imageUrl, String nickname) {
+
+        if (imageUrl != null) {
+            /// 프로필이미지를 수정할 내용이 존재한다면,
+            this.imageUrl = imageUrl;
+        }
+
+        if (nickname != null) {
+            /// 닉네임을 수정할 내용이 존재한다면,
+            this.nickname = nickname;
+        }
+    }
+
+    /// 비밀번호 업데이트
+    public void updatePassword(String passwordHash) {
+        this.password = passwordHash;
     }
 
 }

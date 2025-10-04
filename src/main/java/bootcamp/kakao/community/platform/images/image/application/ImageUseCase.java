@@ -18,7 +18,6 @@ public interface ImageUseCase {
     /// 회원가입을 위한 임시 저장소
     ImageResponse uploadTemporaryImage(ImageRequest req) throws IOException;
 
-
     /// 외부 서비스에서 사용할 로직
     /// 단일 이미지 가져오기
     Image getImage(String url);

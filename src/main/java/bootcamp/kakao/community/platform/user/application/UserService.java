@@ -1,8 +1,10 @@
 package bootcamp.kakao.community.platform.user.application;
 
+import bootcamp.kakao.community.platform.images.image.application.ImageService;
+import bootcamp.kakao.community.platform.images.image.domain.entity.Image;
+import bootcamp.kakao.community.platform.user.application.dto.*;
 import bootcamp.kakao.community.platform.user.domain.entity.User;
 import bootcamp.kakao.community.platform.user.domain.repository.UserRepository;
-import bootcamp.kakao.community.platform.user.application.dto.SignUpRequest;
 import bootcamp.kakao.community.security.jwt.application.JwtProvider;
 import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenResponse;
 import bootcamp.kakao.community.security.jwt.application.dto.JwtTokenRequest;
@@ -12,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,22 @@ public class UserService implements UserUseCase{
     private final BCryptPasswordEncoder passwordEncoder;
 
     private final JwtProvider jwtProvider;
+    private final ImageService imageService;
+
+    /// 이메일 중복 여부
+    @Override
+    @Transactional(readOnly = true)
+    public boolean checkDuplicateEmail(String email) {
+        return repository.existsByEmail(email);
+    }
+
+    /// 닉네임 중복 여부
+    @Override
+    @Transactional(readOnly = true)
+    public boolean checkDuplicateNickName(String nickName) {
+        return repository.existsByNickname(nickName);
+    }
+
 
     /// 회원가입, 회원가입 후 바로 이용가능하도록 토큰 발급
     @Override
@@ -49,6 +66,13 @@ public class UserService implements UserUseCase{
         var requestUser = User.of(request.name(), request.imageUrl(), request.nickname(), request.email(), passwordEncoder.encode(request.password()));
         User user = repository.save(requestUser);
 
+        /// 이미지가 존재하는지 확인 및 매핑시키기 (트랜잭션 & 영속성 컨텍스트)
+        /// 여기서 에러가 나면, 회원가입 전부 롤백
+        Image image = imageService.getImage(request.imageUrl());
+
+        /// 이미지 상태를 확정 (더티체킹)
+        image.confirm(user);
+
         /// 로그인했다면, JWT 발급하기
         var jwtRequest = JwtTokenRequest.from(user);
 
@@ -65,27 +89,85 @@ public class UserService implements UserUseCase{
     public void withdraw(Long userId) {
 
         /// 영속성 컨테이너에 값 불러오기
-        User user = repository.findByIdAndDeletedIsFalse(userId)
-                .orElseThrow(() -> new NoSuchElementException("해당 유저는 없습니다."));
+        User user = loadUser(userId);
 
         /// 더티체킹으로 값 수정하기
         user.delete();
     }
 
-    /// 이메일 중복 여부
+    /// 마이페이지 정보 조회
     @Override
     @Transactional(readOnly = true)
-    public boolean checkDuplicateEmail(String email) {
-        return repository.existsByEmail(email);
+    public MyPageResponse getUser(Long userId) {
+
+        /// 유저 예외처리
+        User user = loadUser(userId);
+
+        /// 리턴
+        return MyPageResponse.from(user);
     }
 
-    /// 닉네임 중복 여부
+    /// 타 유저 조회
     @Override
     @Transactional(readOnly = true)
-    public boolean checkDuplicateNickName(String nickName) {
-        return repository.existsByNickname(nickName);
+    public UserResponse getOtherUser(Long userId) {
+
+        /// 유저 예외처리
+        User user = loadUser(userId);
+
+        /// 리턴
+        return UserResponse.from(user);
     }
 
+    /// 유저 정보 수정 (더티체킹)
+    @Override
+    @Transactional
+    public void updateUser(UserUpdateRequest request, Long userId) {
+
+        /// 유저 예외처리 및 영속성 컨테이너에 등록
+        User user = loadUser(userId);
+
+        /// 새로운 프로필 이미지
+        String profileImageUrl = null;
+
+        /// 기존 이미지 삭제 처리
+        if (user.getImageUrl() != null) {
+            Image oldImage = imageService.getImage(user.getImageUrl());
+            oldImage.unConfirm();   /// 더티체킹으로 삭제처리
+        }
+
+        if (request.imageUrl() != null) {
+            /// 새로 넣을 이미지가 존재하는지 체크
+            profileImageUrl = imageService.getImage(request.imageUrl()).getUrl();
+        }
+
+        /// 존재한다면, 새롭게 수정 더티체킹
+        user.update(profileImageUrl, request.nickname());
+
+    }
+
+    /// 비밀번호 초기화 (더티체킹)
+    @Override
+    @Transactional
+    public void updatePassword(Long userId, PwUpdateRequest request) {
+
+        /// 유저 예외처리 및 영속성 컨테이너에 등록
+        User user = loadUser(userId);
+
+        /// 기존 값과 비교해서 변경하기
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
+            throw new IllegalStateException("기존 비밀번호와 일치하지 않습니다.");
+        }
+
+        /// 변경할 값이 동일한 지 체크
+        /// 요청한 비밀번호 값이 같은지
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new IllegalArgumentException("패스워드가 일치하지 않는 문제입니다.");
+        }
+        /// 새로운 비밀번호로 업데이트 (더티체킹)
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
+
+    }
 
     // =================
     //  외부 조회 로직
