@@ -1,5 +1,10 @@
 package bootcamp.kakao.community.platform.report.application.dto;
 
-public record ReportRequest() {
+import bootcamp.kakao.community.platform.report.domain.entity.ReportType;
+
+public record ReportRequest(
+        ReportType type,
+        Long contentId
+) {
 
 }
