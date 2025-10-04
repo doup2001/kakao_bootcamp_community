@@ -2,7 +2,7 @@ package bootcamp.kakao.community.platform.user.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-
+@Schema(name = "[요청][유저] 회원가입 Request", description = "회원가입을 위한 DTO입니다.")
 public record SignUpRequest(
         String name,
         String imageUrl,
